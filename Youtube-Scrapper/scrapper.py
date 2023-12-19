@@ -12,7 +12,7 @@ header = ["video_id"] + snippet_features + ["duration", "subscriber_count", "tre
                                             "ratings_disabled", "description"]
 
 def setup(api_path, code_path):
-    """Opens and reads the API key and country codes from the files."""
+    """Open and read the API key and country codes from the files."""
     with open(api_path, 'r') as file:
         api_key = file.readline().strip()
 
