@@ -33,8 +33,9 @@ Temporary Items
 
 ### Python ###
 
-# Ignore API Key file
+# Ignore API Key and Instance Key files
 api_key.txt
+airflow_ec2_key.pem
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
