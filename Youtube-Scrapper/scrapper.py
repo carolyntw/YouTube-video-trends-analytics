@@ -1,4 +1,4 @@
-import requests, sys, time, os, argparse, re
+import requests, sys, time, re, s3fs
 
 # list of properties to collect under snippet objects
 snippet_features = ["title", "publishedAt", "channelId", "channelTitle", "categoryId"]
@@ -10,16 +10,6 @@ unsafe_characters = ['\n', '"']
 header = ["video_id"] + snippet_features + ["duration", "subscriber_count", "trending_date", "tags", "view_count", "likes",
                                             "comment_count", "thumbnail_link", "comments_disabled",
                                             "ratings_disabled", "description"]
-
-def setup(api_path, code_path):
-    """Open and read the API key and country codes from the files."""
-    with open(api_path, 'r') as file:
-        api_key = file.readline().strip()
-
-    with open(code_path) as file:
-        country_codes = [x.rstrip() for x in file]
-
-    return api_key, country_codes
 
 def prepare_feature(feature):
     """Remove unsafe characters from given data featur."""
@@ -37,7 +27,6 @@ def parse_duration(duration):
         hours = int(match.group(1)) if match.group(1) else 0
         minutes = int(match.group(2)) if match.group(2) else 0
         seconds = int(match.group(3)) if match.group(3) else 0
-
     return hours * 3600 + minutes * 60 + seconds
 
 def get_channel_statistics(channel_id, api_key):
@@ -118,36 +107,26 @@ def get_pages(country_code, api_key, next_page_token="&"):
 
         items = video_data_page.get('items', [])
         country_data += get_videos(items, api_key)
-
     return country_data
 
-def write_to_file(country_code, country_data, output_dir):
-    """Write the collected data to a CSV file."""
-    print(f"Writing {country_code} data to file...")
-
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    # Continuation of the write_to_file function
-    with open(f"{output_dir}/{time.strftime('%y.%d.%m')}_{country_code}_videos.csv", "w+", encoding='utf-8') as file:
+def write_to_s3(country_code, country_data, bucket_name):
+    """Write the collected data to a CSV file in the specified S3 bucket."""
+    fs = s3fs.S3FileSystem(anon=False)
+    s3_path = f"{bucket_name}/{time.strftime('%Y-%m-%d')}_{country_code}_videos.csv"
+    
+    with fs.open(s3_path, 'w') as file:
         for row in country_data:
             file.write(f"{row}\n")
+    print(f"Data written to {s3_path} in S3 bucket.")
 
-def get_data(api_key, country_codes, output_dir):
-    """Collect data for each country code."""
+def run_youtube_etl(api_key, country_codes):
+    """Run the YouTube ETL process."""
+    bucket_name = "youtube-analysis-airflow"
+
+    with open('api_key.txt', 'r') as file:
+        api_key = file.readline().strip()
+    with open('country_codes.txt', 'r') as file:
+        country_codes = [line.strip() for line in file]
     for country_code in country_codes:
         country_data = [",".join(header)] + get_pages(country_code, api_key)
-        write_to_file(country_code, country_data, output_dir)
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--key_path', help='Path to the file containing the api key, by default will use api_key.txt in the same directory', default='api_key.txt')
-    parser.add_argument('--country_code_path', help='Path to the file containing the list of country codes to scrape, by default will use country_codes.txt in the same directory', default='country_codes.txt')
-    parser.add_argument('--output_dir', help='Path to save the outputted files in', default='output/')
-
-    args = parser.parse_args()
-
-    output_dir = args.output_dir
-    api_key, country_codes = setup(args.key_path, args.country_code_path)
-
-    get_data(api_key, country_codes, output_dir)
+        write_to_s3(country_code, country_data, bucket_name)
