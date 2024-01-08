@@ -63,3 +63,7 @@ $ git clone https://github.com/carolyntw/YouTube-analytics.git
 ### Visualizing Data with Tableau
 1. Open Tableau and connect to the data source in S3.
 2. Import datasets and create visualizations using Tableau's tools.
+
+## Contact Information
+
+If you have any questions or feedback about this project, please get in touch with me at [chankaiy@usc.edu].
