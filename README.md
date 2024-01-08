@@ -11,7 +11,7 @@ This project demonstrates a data engineering workflow for YouTube analytics usin
 
 ## Tableau Dashboard
 ![Dashboard Screenshot](images/dashboard.png)
-[Link to the Dashboard](https://public.tableau.com/app/profile/kai.yin.chan/viz/GlobalYoutubeVideoTrends/GlobalYoutubeVideoTrends)
+[Link to the dashboard](https://public.tableau.com/app/profile/kai.yin.chan/viz/GlobalYoutubeVideoTrends/GlobalYoutubeVideoTrends)
 
 ### Dashboard Features
 - **Global View:** A world map highlighting the view counts and viral scores by country, offering a snapshot of video popularity across the globe.
